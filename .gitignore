@@ -1,0 +1,18 @@
+# dependencies
+/node_modules
+
+# production
+/build
+
+# capistrano log
+/log
+
+# misc
+.DS_Store
+.env
+
+*.log
+*.lock
+package-lock.json
+
+semver.json

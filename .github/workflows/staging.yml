@@ -1,0 +1,38 @@
+name: Staging Deployment
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+concurrency:
+  group: vspace-web-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Change Ruby Version in ruby-version
+        run: |
+          echo "2.6.3" > .ruby-version
+          eval "$(rbenv init -)"
+      - uses: actions/checkout@v2
+      - name: Restore Bundler cache
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-bundle-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bundle-
+      - uses: cloudsbird/capistrano-deploy@v2.3
+        with:
+          target: staging
+          deploy_key: ${{ secrets.DEPLOY_ENC_KEY }}
+          enc_rsa_key_pth: "config/rsa/staging_rsa"
+          auth_sock: /tmp/ssh-auth-vspace-chat-staging.sock
+      - name: Remove existing SSH Key
+        run: |
+          rm -rf /tmp/ssh-auth-vspace-chat-staging.sock
+        if: always()
